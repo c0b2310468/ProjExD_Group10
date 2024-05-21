@@ -36,6 +36,17 @@ def calc_orientation(org: pg.Rect, dst: pg.Rect) -> tuple[float, float]:
     return x_diff/norm, y_diff/norm
 
 
+def load_sound(file):
+    """
+    サウンドファイルをロードする
+    ロードしたサウンドファイルからSoundオブジェクトを新規に作成し、
+    それを返す。
+    """
+    pg.mixer.music.load(file)
+    sound = pg.mixer.Sound(file)
+    return sound
+
+
 class Bird(pg.sprite.Sprite):
     """
     ゲームキャラクター（こうかとん）に関するクラス
@@ -223,6 +234,7 @@ class Enemy(pg.sprite.Sprite):
         self.bound = random.randint(50, HEIGHT//2)  # 停止位置
         self.state = "down"  # 降下状態or停止状態
         self.interval = random.randint(50, 300)  # 爆弾投下インターバル
+    
 
     def update(self):
         """
@@ -303,6 +315,18 @@ def main():
     bg_img = pg.image.load(f"fig/pg_bg.jpg")
     score = Score()
 
+    # サウンド類のロード
+    pg.mixer.pre_init(44100, 32, 2, 1024)  # Mixerを初期化
+    bomb_sound = load_sound("boom.wav")  # 爆発時のSE
+    shoot_sound = load_sound("car_door.wav")  # ビーム発射時のSE
+    clear_sound = load_sound("成功音.mp3")  # ステージクリア時のSE
+    failure_sound = load_sound("呪いの旋律.mp3")  # ゲームオーバー時のSE
+    pg.mixer.music.load("もふもふニュース.mp3")  # ステージ1のBGM
+    # pg.mixer.music.load("ハッピーハッピー.mp3")  # ステージ2のBGM
+    # pg.mixer.music.load("Shooting_Zone.mp3")  # ステージ3のBGM
+    pg.mixer.music.play(-1)  # BGMを繰り返し再生
+
+
     bird = Bird(3, (900, 400))
     bombs = pg.sprite.Group()
     beams = pg.sprite.Group()
@@ -320,6 +344,7 @@ def main():
                 return 0
             if event.type == pg.KEYDOWN and event.key == pg.K_SPACE:
                 beams.add(Beam(bird))
+                shoot_sound.play()
             if score.value >= 100 and key_lst[pg.K_RSHIFT]:
                 bird.state = "hyper"
                 bird.hyper_life = 500
@@ -345,25 +370,31 @@ def main():
             exps.add(Explosion(emy, 100))  # 爆発エフェクト
             score.value += 10  # 10点アップ
             bird.change_img(6, screen)  # こうかとん喜びエフェクト
+            bomb_sound.play()
 
         for bomb in pg.sprite.groupcollide(bombs, beams, True, True).keys():
             exps.add(Explosion(bomb, 50))  # 爆発エフェクト
             score.value += 1  # 1点アップ
+            bomb_sound.play()
         
         for bomb in pg.sprite.groupcollide(bombs, gvts, True, False).keys():
             bird.change_img(8, screen)
             exps.add(Explosion(bomb, 50))
+            bomb_sound.play()
             pg.display.update()
 
         for bomb in pg.sprite.spritecollide(bird, bombs, True):
             if bird.state == "hyper":
                 exps.add(Explosion(bomb, 50))
                 score.value += 1
+                bomb_sound.play()
             if bomb.state == "inactive":
                 continue
             if bird.state == "normal":  
                 bird.change_img(8, screen) # こうかとん悲しみエフェクト
                 score.update(screen)
+                pg.mixer.music.stop()
+                failure_sound.play()
                 pg.display.update()
                 time.sleep(2)
                 return
