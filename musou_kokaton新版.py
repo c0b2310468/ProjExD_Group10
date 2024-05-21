@@ -275,6 +275,30 @@ class Score:
         screen.blit(self.image, self.rect)
 
 
+start = time.time()
+
+class Time:
+    """
+    制限時間を計算、表示させるクラス
+    """
+    start = time.time()
+    def __init__(self):
+        self.font = pg.font.Font(None, 50)
+        self.color = (255, 0, 0)
+        self.measure_time = 5 - (time.time() - start) 
+        self.image = self.font.render(f"Time: {self.measure_time:.2f}", 0, self.color)
+        self.rect = self.image.get_rect()
+        self.rect.center = 112.5, HEIGHT - 100
+        if self.measure_time <= 0:
+            self.measure_time = 0
+            return
+        
+    def update(self, screen: pg.Surface):
+        self.image = self.font.render(f"Time: {self.measure_time:.2f}", 0, self.color)
+        screen.blit(self.image, self.rect)
+
+
+
 class Emp(pg.sprite.Sprite):
     """
     電磁パルスに関するクラス
@@ -295,14 +319,13 @@ class Emp(pg.sprite.Sprite):
             bomb.state = "inactive"
         pg.display.update()
         time.sleep(0.05)
-        
-        
+
+
 def main():
     pg.display.set_caption("真！こうかとん無双")
     screen = pg.display.set_mode((WIDTH, HEIGHT))
     bg_img = pg.image.load(f"fig/pg_bg.jpg")
     score = Score()
-
     bird = Bird(3, (900, 400))
     bombs = pg.sprite.Group()
     beams = pg.sprite.Group()
@@ -310,11 +333,14 @@ def main():
     emys = pg.sprite.Group()
     emp = pg.sprite.Group()
     gvts = pg.sprite.Group()
-
     tmr = 0
-    clock = pg.time.Clock()
+    clock = pg.time.Clock() 
+    
+    limit_start = time.time()
     while True:
         key_lst = pg.key.get_pressed()
+        time_class = Time(); time_limit = 5 - (time.time() - limit_start)
+        #print(time_limit)
         for event in pg.event.get():
             if event.type == pg.QUIT:
                 return 0
@@ -364,10 +390,18 @@ def main():
             if bird.state == "normal":  
                 bird.change_img(8, screen) # こうかとん悲しみエフェクト
                 score.update(screen)
+                time_class.update(screen)
                 pg.display.update()
                 time.sleep(2)
                 return
-
+        if time_limit <= 0:
+                bird.change_img(8, screen) 
+                score.update(screen)
+                time_class.update(screen)
+                pg.display.update()
+                time.sleep(2)
+                break
+        
         bird.update(key_lst, screen)
         beams.update()
         beams.draw(screen)
@@ -380,6 +414,7 @@ def main():
         gvts.draw(screen)
         gvts.update()
         score.update(screen)
+        time_class.update(screen)
         pg.display.update()
         tmr += 1
         clock.tick(50)
