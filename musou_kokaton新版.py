@@ -275,28 +275,27 @@ class Score:
         screen.blit(self.image, self.rect)
 
 
-start = time.time()
+start = time.time()  # start の定義
+
 
 class Time:
     """
     制限時間を計算、表示させるクラス
     """
-    start = time.time()
     def __init__(self):
         self.font = pg.font.Font(None, 50)
-        self.color = (255, 0, 0)
-        self.measure_time = 5 - (time.time() - start) 
+        self.color = (255, 0, 0)  # 色
+        self.measure_time = 120 - (time.time() - start)  # 120秒の制限時間を表示　
         self.image = self.font.render(f"Time: {self.measure_time:.2f}", 0, self.color)
         self.rect = self.image.get_rect()
-        self.rect.center = 112.5, HEIGHT - 100
-        if self.measure_time <= 0:
+        self.rect.center = 135, HEIGHT - 100  # Time の座標
+        if self.measure_time < 0:  # self.measure_time の値を0未満にしない。　若干のラグにより0未満になってしまうため
             self.measure_time = 0
             return
         
     def update(self, screen: pg.Surface):
         self.image = self.font.render(f"Time: {self.measure_time:.2f}", 0, self.color)
         screen.blit(self.image, self.rect)
-
 
 
 class Emp(pg.sprite.Sprite):
@@ -335,12 +334,14 @@ def main():
     gvts = pg.sprite.Group()
     tmr = 0
     clock = pg.time.Clock() 
+    limit_start = time.time()  # 
     
-    limit_start = time.time()
+
     while True:
         key_lst = pg.key.get_pressed()
-        time_class = Time(); time_limit = 5 - (time.time() - limit_start)
-        #print(time_limit)
+        time_class = Time()  # Timeクラスを呼び出す
+        time_limit = 120 - (time.time() - limit_start)  # 制限時間を設ける
+
         for event in pg.event.get():
             if event.type == pg.QUIT:
                 return 0
@@ -357,6 +358,7 @@ def main():
             if event.type == pg.KEYDOWN and event.key == pg.K_RETURN and score.value > 200:
                 gvts.add(Gravity(400))
                 score.value -= 200
+
         screen.blit(bg_img, [0, 0])
 
         if tmr%200 == 0:  # 200フレームに1回，敵機を出現させる
@@ -390,11 +392,12 @@ def main():
             if bird.state == "normal":  
                 bird.change_img(8, screen) # こうかとん悲しみエフェクト
                 score.update(screen)
-                time_class.update(screen)
+                #time_class.update(screen)
                 pg.display.update()
                 time.sleep(2)
                 return
-        if time_limit <= 0:
+            
+        if time_limit <= 0:  # 制限時間を過ぎたら Game Over
                 bird.change_img(8, screen) 
                 score.update(screen)
                 time_class.update(screen)
@@ -414,7 +417,7 @@ def main():
         gvts.draw(screen)
         gvts.update()
         score.update(screen)
-        time_class.update(screen)
+        time_class.update(screen)  # time_class を update
         pg.display.update()
         tmr += 1
         clock.tick(50)
