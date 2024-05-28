@@ -5,7 +5,6 @@ import sys
 import time
 import pygame as pg
 
-
 WIDTH, HEIGHT = 1600, 900  # ゲームウィンドウの幅，高さ
 os.chdir(os.path.dirname(os.path.abspath(__file__)))
 
@@ -275,6 +274,32 @@ class Score:
         screen.blit(self.image, self.rect)
 
 
+class Failure:
+    """
+    ゲームが失敗したときに表示する文のクラス
+    """
+    def __init__(self, screen):
+        self.fonto = pg.font.Font(None, 150)
+        self.txt = self.fonto.render("Game Over", True, (255, 255, 255))
+        screen.blit(self.txt, [WIDTH/2-255, HEIGHT/2])
+        self.fonto = pg.font.Font(None, 150)
+        self.txt = self.fonto.render("Game Over", True, (0, 0, 0))
+        screen.blit(self.txt, [WIDTH/2-260, HEIGHT/2])
+
+
+class Success:
+    """
+    ゲームが成功したときに表示する文のクラス
+    """
+    def __init__(self, screen):
+        self.fonto = pg.font.Font(None, 150)
+        self.txt = self.fonto.render("Game Clear!", True, (255, 255, 255))
+        screen.blit(self.txt, [WIDTH/2-305, HEIGHT/2])
+        self.fonto = pg.font.Font(None, 150)
+        self.txt = self.fonto.render("Game Clear!", True, (255, 215, 0))
+        screen.blit(self.txt, [WIDTH/2-310, HEIGHT/2])
+
+
 class Emp(pg.sprite.Sprite):
     """
     電磁パルスに関するクラス
@@ -364,6 +389,7 @@ def main():
             if bird.state == "normal":  
                 bird.change_img(8, screen) # こうかとん悲しみエフェクト
                 score.update(screen)
+                Failure(screen)
                 pg.display.update()
                 time.sleep(2)
                 return
