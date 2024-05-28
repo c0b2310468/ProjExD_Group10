@@ -5,7 +5,6 @@ import sys
 import time
 import pygame as pg
 
-
 WIDTH, HEIGHT = 1600, 900  # ゲームウィンドウの幅，高さ
 os.chdir(os.path.dirname(os.path.abspath(__file__)))
 
@@ -312,7 +311,7 @@ class Score:
     def __init__(self):
         self.font = pg.font.Font(None, 50)
         self.color = (0, 0, 255)
-        self.value = 490 
+        self.value = 0 
         self.image = self.font.render(f"Score: {self.value}", 0, self.color)
         self.rect = self.image.get_rect()
         self.rect.center = 100, HEIGHT-50
@@ -347,6 +346,33 @@ class Time:
         self.image = self.font.render(f"Time: {self.measure_time:.2f}", 0, self.color)
         screen.blit(self.image, self.rect)
 
+class Failure:
+    """
+    ゲームが失敗したときに表示する文のクラス
+    """
+    def __init__(self, screen):
+        self.fonto = pg.font.Font(None, 150)
+        self.txt = self.fonto.render("Game Over", True, (255, 255, 255))
+        screen.blit(self.txt, [WIDTH/2-255, HEIGHT/2])
+        self.fonto = pg.font.Font(None, 150)
+        self.txt = self.fonto.render("Game Over", True, (0, 0, 0))
+        screen.blit(self.txt, [WIDTH/2-260, HEIGHT/2])
+        pg.display.update()
+        time.sleep(2)
+
+class Success:
+    """
+    ゲームが成功したときに表示する文のクラス
+    """
+    def __init__(self, screen):
+        self.fonto = pg.font.Font(None, 150)
+        self.txt = self.fonto.render("Game Clear!", True, (255, 255, 255))
+        screen.blit(self.txt, [WIDTH/2-305, HEIGHT/2])
+        self.fonto = pg.font.Font(None, 150)
+        self.txt = self.fonto.render("Game Clear!", True, (255, 215, 0))
+        screen.blit(self.txt, [WIDTH/2-310, HEIGHT/2])
+        pg.display.update()
+        time.sleep(2)
 
 class Emp(pg.sprite.Sprite):
     """
@@ -587,6 +613,7 @@ def main():
                 score.update(screen)
                 pg.mixer.music.stop()
                 failure_sound.play()
+                Failure(screen)
                 pg.display.update()
                 time.sleep(2)
                 return
@@ -612,6 +639,7 @@ def main():
                 print(labo_life)
                 pg.display.update()
                 time_class.update(screen)
+                Success(screen)
                 pg.display.update()
                 time.sleep(2)
                 return
@@ -628,6 +656,7 @@ def main():
                 bird.change_img(8, screen) 
                 score.update(screen)
                 time_class.update(screen)
+                Failure(screen)
                 pg.display.update()
                 time.sleep(2)
                 break
