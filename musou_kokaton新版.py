@@ -285,7 +285,8 @@ class Failure:
         self.fonto = pg.font.Font(None, 150)
         self.txt = self.fonto.render("Game Over", True, (0, 0, 0))
         screen.blit(self.txt, [WIDTH/2-260, HEIGHT/2])
-
+        pg.display.update()
+        time.sleep(2)
 
 class Success:
     """
@@ -298,7 +299,8 @@ class Success:
         self.fonto = pg.font.Font(None, 150)
         self.txt = self.fonto.render("Game Clear!", True, (255, 215, 0))
         screen.blit(self.txt, [WIDTH/2-310, HEIGHT/2])
-
+        pg.display.update()
+        time.sleep(2)
 
 class Emp(pg.sprite.Sprite):
     """
@@ -389,9 +391,7 @@ def main():
             if bird.state == "normal":  
                 bird.change_img(8, screen) # こうかとん悲しみエフェクト
                 score.update(screen)
-                Failure(screen)
-                pg.display.update()
-                time.sleep(2)
+                Success(screen)
                 return
 
         bird.update(key_lst, screen)
