@@ -312,13 +312,39 @@ class Score:
     def __init__(self):
         self.font = pg.font.Font(None, 50)
         self.color = (0, 0, 255)
-        self.value = 0
+        self.value = 490 
         self.image = self.font.render(f"Score: {self.value}", 0, self.color)
         self.rect = self.image.get_rect()
         self.rect.center = 100, HEIGHT-50
 
     def update(self, screen: pg.Surface):
         self.image = self.font.render(f"Score: {self.value}", 0, self.color)
+        screen.blit(self.image, self.rect)
+
+
+start = time.time()  # start の定義
+# print(start)
+a = 0
+
+class Time:
+    """
+    制限時間を計算、表示させるクラス
+    """
+    def __init__(self):
+        self.font = pg.font.Font(None, 50)
+        self.color = (255, 255, 255)  # 色
+        self.measure_time = 10 - (time.time() - start) # 120秒の制限時間を表示　
+        self.image = self.font.render(f"Time: {self.measure_time:.2f}", 0, self.color)
+        self.rect = self.image.get_rect()
+        self.rect.center = 135, HEIGHT - 100  # Time の座標
+        self.hoge = 10
+        if self.measure_time < 0:  # self.measure_time の値を0未満にしない。　若干のラグにより0未満になってしまうため
+            self.measure_time = 0
+        
+        
+    def update(self, screen: pg.Surface):
+        self.measure_time = self.hoge - (time.time() - start)  # 120秒の制限時間を表示　
+        self.image = self.font.render(f"Time: {self.measure_time:.2f}", 0, self.color)
         screen.blit(self.image, self.rect)
 
 
@@ -452,8 +478,12 @@ def main():
     sta3 = pg.sprite.Group()
 
     tmr = 0
-    clock = pg.time.Clock()
+    clock = pg.time.Clock() 
+    
+
     while True:
+        time_class = Time()  # Timeクラスを呼び出す
+        #print(time_class.measure_time)
         key_lst = pg.key.get_pressed()
         for event in pg.event.get():
             if event.type == pg.QUIT:
@@ -462,18 +492,18 @@ def main():
                 beams.add(Beam(bird))
                 shoot_sound.play()
             if score.value >= 50 and key_lst[pg.K_RSHIFT]:
-                if state != "stage3":  # 3面到達時に使用不可になるように設定
+                if state != "stage3" or "boss":  # 3面到達時に使用不可になるように設定
                     if score.value > 50:
                         bird.state = "hyper"
                         bird.hyper_life = 500
                         score.value -= 50
             if event.type == pg.KEYDOWN and event.key == pg.K_e:
-                if state != "stage3":  # 3麺到達時に使用不可になるように設定
+                if state != "stage3" or "boss":  # 3麺到達時に使用不可になるように設定
                     if score.value > 10:
                         emp.add(Emp(emys, bombs, screen))
                         score.value -=10
             if event.type == pg.KEYDOWN and event.key == pg.K_RETURN and score.value > 100:
-                if state != "stage3":
+                if state != "stage3" or "boss":
                     if score.value > 100:
                         gvts.add(Gravity(400))
                         score.value -= 100
@@ -539,10 +569,6 @@ def main():
             exps.add(Explosion(fire, 75))  # 爆発エフェクト
             score.value += 10  # 10点アップ
         
-        for fire in pg.sprite.groupcollide(fires, beams, True, True).keys():
-            exps.add(Explosion(fire, 75))  # 爆発エフェクト
-            score.value += 10  # 10点アップ
-        
         for bomb in pg.sprite.groupcollide(bombs, gvts, True, False).keys():
             bird.change_img(8, screen)
             exps.add(Explosion(bomb, 50))
@@ -565,7 +591,6 @@ def main():
                 time.sleep(2)
                 return
             
-        
         for fire in pg.sprite.spritecollide(bird, fires, True):
             if bird.state == "hyper":
                 exps.add(Explosion(fire, 75))
@@ -586,6 +611,27 @@ def main():
                 labo_life -= beam.attack  # ボスの体力減少設定
                 print(labo_life)
                 pg.display.update()
+                time_class.update(screen)
+                pg.display.update()
+                time.sleep(2)
+                return
+            
+        if score.value >= 70 and state == "sta2":
+            time_class.hoge += 30  # ２面での制限時間の増加
+            time_class.update(screen)
+
+        if score.value >= 150 and state == "stage3":
+            time_class.hoge = time_class.hoge + 120  # ３面での制限時間の増加        
+            time_class.update(screen)
+
+        if time_class.hoge <= 0:  # 制限時間を過ぎたら Game Over
+                bird.change_img(8, screen) 
+                score.update(screen)
+                time_class.update(screen)
+                pg.display.update()
+                time.sleep(2)
+                break
+        
 
         bird.update(key_lst, screen)
         beams.update()
@@ -603,6 +649,7 @@ def main():
         fires.draw(screen)
         dragons.update()
         dragons.draw(screen)
+        time_class.update(screen)  # time_class を update
         pg.display.update()
         tmr += 1
         clock.tick(50)
