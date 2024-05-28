@@ -169,6 +169,7 @@ class Beam(pg.sprite.Sprite):
         self.rect.centery = bird.rect.centery+bird.rect.height*self.vy
         self.rect.centerx = bird.rect.centerx+bird.rect.width*self.vx
         self.speed = 10
+        self.attack = 20
 
     def update(self):
         """
@@ -214,15 +215,23 @@ class Enemy(pg.sprite.Sprite):
     """
     imgs = [pg.image.load(f"fig/alien{i}.png") for i in range(1, 4)]
     
-    def __init__(self):
+    def __init__(self, boss):
         super().__init__()
         self.image = random.choice(__class__.imgs)
         self.rect = self.image.get_rect()
-        self.rect.center = random.randint(0, WIDTH), 0
         self.vy = +6
         self.bound = random.randint(50, HEIGHT//2)  # 停止位置
         self.state = "down"  # 降下状態or停止状態
         self.interval = random.randint(50, 300)  # 爆弾投下インターバル
+        if boss == "normal":
+            self.rect.center = random.randint(0, WIDTH), 0
+        if boss == "up": #ボスが登場したとき、ボス周辺に敵機が配置しないように設定
+            self.interval = 40
+            self.cen = random.randint(0, 1)
+            if self.cen == 0:
+                self.rect.center = random.randint(0, 400), 0
+            else:
+                self.rect.center = random.randint(1200, WIDTH), 0
 
     def update(self):
         """
@@ -265,7 +274,7 @@ class Score:
     def __init__(self):
         self.font = pg.font.Font(None, 50)
         self.color = (0, 0, 255)
-        self.value = 0
+        self.value = 790
         self.image = self.font.render(f"Score: {self.value}", 0, self.color)
         self.rect = self.image.get_rect()
         self.rect.center = 100, HEIGHT-50
@@ -296,12 +305,45 @@ class Emp(pg.sprite.Sprite):
         pg.display.update()
         time.sleep(0.05)
         
+
+class Stage3(pg.sprite.Sprite):
+    """
+    3面に関するクラス
+    """
+    def __init__(self, screen: pg.Surface):
+        """
+        ３面ステージsurfaceを生成
+        引数 screen：画面Surface
+        """
+        super().__init__()
+        self.image = pg.image.load("fig/space.jpeg")
+        pg.display.update()
+        screen.blit(self.image, [0,0])
+
+
+class Lastboss(pg.sprite.Sprite):
+    """
+    ラスボスに関するクラス
+    """
+    def __init__(self, screen: pg.Surface):
+        """
+        ラスボスsurfaceを生成
+        引数 screen:画面Surface
+        """
+        super().__init__()
+        self.image = pg.image.load("fig/lastboss2.png")
+        self.rect = self.image.get_rect()
+        self.rect.center = WIDTH//2, HEIGHT//2-50
+        screen.blit(self.image, [WIDTH//2-200, HEIGHT//2-200])
+        
         
 def main():
     pg.display.set_caption("真！こうかとん無双")
     screen = pg.display.set_mode((WIDTH, HEIGHT))
     bg_img = pg.image.load(f"fig/pg_bg.jpg")
     score = Score()
+    state = "normal"
+    labo_life = 25  # ボスの体力を設定
 
     bird = Bird(3, (900, 400))
     bombs = pg.sprite.Group()
@@ -310,6 +352,7 @@ def main():
     emys = pg.sprite.Group()
     emp = pg.sprite.Group()
     gvts = pg.sprite.Group()
+    sta3 = pg.sprite.Group()
 
     tmr = 0
     clock = pg.time.Clock()
@@ -320,35 +363,55 @@ def main():
                 return 0
             if event.type == pg.KEYDOWN and event.key == pg.K_SPACE:
                 beams.add(Beam(bird))
-            if score.value >= 100 and key_lst[pg.K_RSHIFT]:
-                bird.state = "hyper"
-                bird.hyper_life = 500
-                score.value -= 100
+            if score.value >= 50 and key_lst[pg.K_RSHIFT]:
+                if state != "stage3":  # 3面到達時に使用不可になるように設定
+                    bird.state = "hyper"
+                    bird.hyper_life = 500
+                    score.value -= 50
             if event.type == pg.KEYDOWN and event.key == pg.K_e:
-                if score.value > 20:
-                    emp.add(Emp(emys, bombs, screen))
-                    score.value -= 20
-            if event.type == pg.KEYDOWN and event.key == pg.K_RETURN and score.value > 200:
-                gvts.add(Gravity(400))
-                score.value -= 200
-        screen.blit(bg_img, [0, 0])
+                if state != "stage3":  # 3面到達時に使用不可になるように設定
+                    if score.value > 10:
+                        emp.add(Emp(emys, bombs, screen)) 
+                        score.value -= 10
+            if event.type == pg.KEYDOWN and event.key == pg.K_RETURN and score.value > 100:
+                if state != "stage3":  # 3面到達時に使用不可になるように設定
+                    gvts.add(Gravity(400))
+                    score.value -= 100
+        if score.value >= 500:  # スコアが500以上で3面に突入
+            state = "stage3"
+        if state == "normal":
+            screen.blit(bg_img, [0, 0])
+        if state == "stage3":
+            sta3.add(Stage3(screen))
+            score.color = (255, 0, 0)
+            if score.value >= 800 and labo_life > 0:  # スコアが800以上とボスの体力が０以下でなければ、敵機の爆弾投下インターバルの減少とボス出現
+                state = "boss"
+                labo = Lastboss(screen)
 
-        if tmr%200 == 0:  # 200フレームに1回，敵機を出現させる
-            emys.add(Enemy())
+        if state == "boss":  # ボス出現時のみ敵機の出現率を上昇させる
+            if tmr%100 == 0:  # 100フレームに一回、敵機出現
+                emys.add(Enemy("up"))
+        if state == "normal" or "stage3":
+            if tmr%200 == 0:  # 200フレームに1回，敵機を出現させる
+                emys.add(Enemy("normal"))
 
         for emy in emys:
             if emy.state == "stop" and tmr%emy.interval == 0:
                 # 敵機が停止状態に入ったら，intervalに応じて爆弾投下
                 bombs.add(Bomb(emy, bird))
 
+        if state == "boss" and tmr%emy.interval == 0 and score.value >= 800:
+            # ボスの爆弾投下設定
+            bombs.add(Bomb(labo, bird))
+
         for emy in pg.sprite.groupcollide(emys, beams, True, True).keys():
             exps.add(Explosion(emy, 100))  # 爆発エフェクト
-            score.value += 10  # 10点アップ
+            score.value += 20  # 20点アップ
             bird.change_img(6, screen)  # こうかとん喜びエフェクト
 
         for bomb in pg.sprite.groupcollide(bombs, beams, True, True).keys():
             exps.add(Explosion(bomb, 50))  # 爆発エフェクト
-            score.value += 1  # 1点アップ
+            score.value += 5  # 5点アップ
         
         for bomb in pg.sprite.groupcollide(bombs, gvts, True, False).keys():
             bird.change_img(8, screen)
@@ -367,6 +430,14 @@ def main():
                 pg.display.update()
                 time.sleep(2)
                 return
+        
+        if state == "boss":
+            for beam in pg.sprite.spritecollide(labo, beams, True):
+                exps.add(Explosion(labo, 50))  # 爆発エフェクト
+                bird.change_img(6, screen)  # こうかとん喜びエフェクト
+                labo_life -= beam.attack  # ボスの体力減少設定
+                print(labo_life)
+                pg.display.update()
 
         bird.update(key_lst, screen)
         beams.update()
