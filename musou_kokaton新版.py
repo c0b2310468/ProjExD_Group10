@@ -540,9 +540,6 @@ def main():
             if score.value >= 800 and labo_life > 0:
                 state = "boss"
                 labo = Lastboss(screen)
-        if state == "boss":
-            if tmr%100 == 0:
-                emys.add(Enemy("up"))
         if score.value >= 300 and score.value < 500:
             state = "sta2"
         if state == "sta1":
@@ -552,10 +549,10 @@ def main():
 
         if tmr%200 == 0 and score.value >= 300 and score.value <= 315:
             dragons.add(Dragon())
-        if state == "sta1" or "sta2":
+        if state == "sta1" or state == "sta2":
             if tmr%200 == 0:  # 200フレームに1回，敵機を出現させる
                 emys.add(Enemy("normal"))
-        if state == "boss" or "stage3":
+        if state == "boss" or state == "stage3":
             if tmr%150 == 0:
                 emys.add(Enemy("up"))
 
