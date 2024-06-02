@@ -311,7 +311,7 @@ class Score:
     def __init__(self):
         self.font = pg.font.Font(None, 50)
         self.color = (0, 0, 255)
-        self.value = 0 
+        self.value = 790
         self.image = self.font.render(f"Score: {self.value}", 0, self.color)
         self.rect = self.image.get_rect()
         self.rect.center = 100, HEIGHT-50
@@ -332,11 +332,11 @@ class Time:
     def __init__(self):
         self.font = pg.font.Font(None, 50)
         self.color = (255, 255, 255)  # 色
-        self.measure_time = 10 - (time.time() - start) # 120秒の制限時間を表示　
+        self.measure_time = 120 - (time.time() - start) # 120秒の制限時間を表示　
         self.image = self.font.render(f"Time: {self.measure_time:.2f}", 0, self.color)
         self.rect = self.image.get_rect()
         self.rect.center = 135, HEIGHT - 100  # Time の座標
-        self.hoge = 10
+        self.hoge = 120
         if self.measure_time < 0:  # self.measure_time の値を0未満にしない。　若干のラグにより0未満になってしまうため
             self.measure_time = 0
         
@@ -509,7 +509,6 @@ def main():
 
     while True:
         time_class = Time()  # Timeクラスを呼び出す
-        #print(time_class.measure_time)
         key_lst = pg.key.get_pressed()
         for event in pg.event.get():
             if event.type == pg.QUIT:
@@ -553,11 +552,11 @@ def main():
 
         if tmr%200 == 0 and score.value >= 300 and score.value <= 315:
             dragons.add(Dragon())
-        if state == "sta1" or "sta2"  or "stage3":
+        if state == "sta1" or "sta2":
             if tmr%200 == 0:  # 200フレームに1回，敵機を出現させる
                 emys.add(Enemy("normal"))
-        if state == "boss":
-            if tmr%100 == 0:
+        if state == "boss" or "stage3":
+            if tmr%150 == 0:
                 emys.add(Enemy("up"))
 
         for emy in emys:
@@ -636,20 +635,22 @@ def main():
                 exps.add(Explosion(labo, 50))  # 爆発エフェクト
                 bird.change_img(6, screen)  # こうかとん喜びエフェクト
                 labo_life -= beam.attack  # ボスの体力減少設定
-                print(labo_life)
                 pg.display.update()
                 time_class.update(screen)
-                Success(screen)
-                pg.display.update()
-                time.sleep(2)
-                return
+                if labo_life <= 0:
+                    pg.mixer.music.stop()
+                    clear_sound.play()
+                    Success(screen)
+                    pg.display.update()
+                    time.sleep(2)
+                    return
             
-        if score.value >= 70 and state == "sta2":
-            time_class.hoge += 30  # ２面での制限時間の増加
+        if state == "sta2":
+            time_class.hoge += 100  # ２面での制限時間の増加
             time_class.update(screen)
 
-        if score.value >= 150 and state == "stage3":
-            time_class.hoge = time_class.hoge + 120  # ３面での制限時間の増加        
+        if state == "stage3":
+            time_class.hoge = time_class.hoge + 60  # ３面での制限時間の増加        
             time_class.update(screen)
 
         if time_class.hoge <= 0:  # 制限時間を過ぎたら Game Over
