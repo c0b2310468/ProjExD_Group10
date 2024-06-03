@@ -327,7 +327,7 @@ class Score:
     def __init__(self):
         self.font = pg.font.Font(None, 50)
         self.color = (0, 0, 255)
-        self.value = 790
+        self.value = 0
         self.image = self.font.render(f"Score: {self.value}", 0, self.color)
         self.rect = self.image.get_rect()
         self.rect.center = 100, HEIGHT-50
@@ -347,7 +347,7 @@ class Time:
     def __init__(self):
         self.font = pg.font.Font(None, 50)
         self.color = (255, 255, 255)  # 色
-        self.hoge = 10
+        self.hoge = 120
         self.measure_time = self.hoge - (time.time() - start) # 120秒の制限時間を表示　
         self.image = self.font.render(f"Time: {self.measure_time:.2f}", 0, self.color)
         self.rect = self.image.get_rect()
@@ -493,7 +493,7 @@ def main():
     state  = "sta1"
     score = Score()
     labo_life = 1025  # ボスの体力を設定
-    idx = 2
+    idx = 0
 
     # サウンド類のロード
     pg.mixer.pre_init(44100, 32, 2, 1024)  # Mixerを初期化
@@ -586,7 +586,7 @@ def main():
                 emys.add(Enemy("up"))
             if tmr%200 == 0:
                 emys.add(Enemy("up"))
-            if tmr%250 == 0:
+            if tmr%500 == 0:
                 emys.add(Enemy("up"))
 
         for emy in emys:
@@ -681,13 +681,13 @@ def main():
             idx += 1
             a = time_class.measure_time
             time_class = Time()  # Timeクラスを呼び出す
-            time_class.hoge = 100 + time_class.measure_time  # ２面での制限時間の増加
+            time_class.hoge = 150  # ２面での制限時間の増加
             time_class.update(screen)
 
         if state == "stage3" and idx == 2:
             a = time_class.measure_time
             time_class = Time()  # Timeクラスを呼び出す
-            time_class.hoge = time_class.measure_time + 120  # ３面での制限時間の増加        
+            time_class.hoge = 180  # ３面での制限時間の増加        
             time_class.update(screen)
 
         if time_class.measure_time <= 0:  # 制限時間を過ぎたら Game Over
