@@ -462,7 +462,14 @@ class Lastboss(pg.sprite.Sprite):
 
 
 class Lastbosslife(pg.sprite.Sprite):
+    """
+    ラスボスの体力に関するクラス
+    """
     def __init__(self, screen: pg.Surface):
+        """
+        ラスボス体力surfaceを生成
+        引数 screen:画面Surface
+        """
         super().__init__()
         self.font = pg.font.Font(None, 50)
         self.color = (0, 255, 255)
@@ -474,7 +481,7 @@ class Lastbosslife(pg.sprite.Sprite):
     def update(self, screen: pg.Surface):
         self.image1 = self.font.render(f"life: {self.life}", 0, self.color)
         screen.blit(self.image1, self.rect1)
-        print(self.life)
+    
 
 class Stage2(pg.sprite.Sprite):
     """
@@ -526,7 +533,7 @@ def main():
     bg_img = pg.image.load(f"fig/pg_bg.jpg")
     state  = "sta1"
     score = Score()
-    idx = 2
+    idx = 0
     idx1 = 0
 
     Title(screen)
