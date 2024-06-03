@@ -361,6 +361,25 @@ class Time:
         self.image = self.font.render(f"Time: {self.measure_time:.2f}", 0, self.color)
         screen.blit(self.image, self.rect)
 
+
+class Title:
+    """
+    タイトルを出すクラス
+    """
+    def __init__(self, screen):
+        self.fonto = pg.font.Font(None, 150)
+        self.txt_bg_img = pg.image.load("fig/txt_bg_img.jpg")
+        pg.display.update()
+        screen.blit(self.txt_bg_img, [0, 0])
+        self.txt = self.fonto.render("Last Of Kokaton", True, (255, 255, 255))
+        screen.blit(self.txt, [WIDTH/2-305, HEIGHT/2])
+        self.fonto = pg.font.Font(None, 150)
+        self.txt = self.fonto.render("Last Of Kokaton", True, (255, 215, 0))
+        screen.blit(self.txt, [WIDTH/2-310, HEIGHT/2])
+        pg.display.update()
+        time.sleep(2)
+
+
 class Failure:
     """
     ゲームが失敗したときに表示する文のクラス
@@ -509,6 +528,8 @@ def main():
     score = Score()
     idx = 2
     idx1 = 0
+
+    Title(screen)
 
     # サウンド類のロード
     pg.mixer.pre_init(44100, 32, 2, 1024)  # Mixerを初期化
