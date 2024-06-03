@@ -497,14 +497,12 @@ def main():
 
     # サウンド類のロード
     pg.mixer.pre_init(44100, 32, 2, 1024)  # Mixerを初期化
-    bomb_sound = load_sound("boom.wav")  # 爆発時のSE
-    shoot_sound = load_sound("car_door.wav")  # ビーム発射時のSE
-    clear_sound = load_sound("成功音.mp3")  # ステージクリア時のSE
-    failure_sound = load_sound("呪いの旋律.mp3")  # ゲームオーバー時のSE
-    pg.mixer.music.load("もふもふニュース.mp3")  # ステージ1のBGM
-    # pg.mixer.music.load("ハッピーハッピー.mp3")  # ステージ2のBGM
-    # pg.mixer.music.load("Shooting_Zone.mp3")  # ステージ3のBGM
-    pg.mixer.music.play(-1)  # BGMを繰り返し再生
+    bomb_sound = load_sound(f"sound/boom.wav")  # 爆発時のSE
+    shoot_sound = load_sound(f"sound/car_door.wav")  # ビーム発射時のSE
+    clear_sound = load_sound(f"sound/成功音.mp3")  # ステージクリア時のSE
+    failure_sound = load_sound(f"sound/呪いの旋律.mp3")  # ゲームオーバー時のSE
+    pg.mixer.music.load(f"sound/もふもふニュース.mp3")  # ステージ1のBGM
+    pg.mixer.music.play(-1)
 
 
     bird = Bird(3, (900, 400))
@@ -521,6 +519,7 @@ def main():
 
     tmr = 0
     clock = pg.time.Clock() 
+    flag = 0
     time_class = Time()  # Timeクラスを呼び出す
     
 
@@ -552,6 +551,10 @@ def main():
             state = "stage3"
         if state == "stage3":
             sta3.add(Stage3(screen))
+            if flag == 1:
+                pg.mixer.music.load(f"sound/Shooting_Zone.mp3")  # ステージ3のBGM
+                pg.mixer.music.play(-1)  # BGMを繰り返し再生
+                flag += 1
             score.color = (255, 0, 0)
             if score.value >= 800 and labo_life > 0:
                 state = "boss"
@@ -562,6 +565,10 @@ def main():
         if state == "sta1":
             screen.blit(bg_img, [0, 0])
         if state == "sta2":
+            if flag == 0:
+                pg.mixer.music.load(f"sound/ハッピーハッピー.mp3")  # ステージ2のBGM
+                pg.mixer.music.play(-1)
+                flag += 1
             stage2.add(Stage2(bombs, screen))
         
         if tmr%200 == 0 and score.value >= 300 and score.value <= 500:
@@ -649,6 +656,8 @@ def main():
             if bird.state == "normal":  
                 bird.change_img(8, screen) # こうかとん悲しみエフェクト
                 score.update(screen)
+                failure_sound.play()
+                Failure(screen)
                 pg.display.update()
                 time.sleep(2)
                 return
