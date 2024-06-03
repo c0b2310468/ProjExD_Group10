@@ -230,18 +230,28 @@ class Enemy(pg.sprite.Sprite):
         self.image = random.choice(__class__.imgs)
         self.rect = self.image.get_rect()
         self.vy = +6
+        self.rand = random.randint(0,1)
         self.bound = random.randint(50, HEIGHT//2)  # 停止位置
         self.state = "down"  # 降下状態or停止状態
         self.interval = random.randint(50, 300)  # 爆弾投下インターバル
         if boss == "normal":
-            self.rect.center = random.randint(0, WIDTH), 0
+            if self.rand == 0:
+                self.rect.center = random.randint(0, WIDTH), 0
+            if self.rand == 1:
+                self.rect.center = random.randint(0, WIDTH), HEIGHT
         if boss == "up": #ボスが登場したとき、ボス周辺に敵機が配置しないように設定
             self.interval = 40
             self.cen = random.randint(0, 1)
             if self.cen == 0:
-                self.rect.center = random.randint(0, 400), 0
+                if self.rand == 0:
+                    self.rect.center = random.randint(0, 400), 0
+                if self.rand == 1:
+                    self.rect.center = random.randint(0, 400), HEIGHT
             else:
-                self.rect.center = random.randint(1200, WIDTH), 0
+                if self.rand == 0:
+                    self.rect.center = random.randint(1200, WIDTH), 0
+                if self.rand == 1:
+                    self.rect.center = random.randint(1200, WIDTH), HEIGHT
 
     def update(self):
         """
@@ -249,10 +259,16 @@ class Enemy(pg.sprite.Sprite):
         ランダムに決めた停止位置_boundまで降下したら，_stateを停止状態に変更する
         引数 screen：画面Surface
         """
-        if self.rect.centery > self.bound:
-            self.vy = 0
-            self.state = "stop"
-        self.rect.centery += self.vy
+        if self.rand == 0:
+            if self.rect.centery > self.bound:
+                self.vy = 0
+                self.state = "stop"
+            self.rect.centery += self.vy
+        if self.rand == 1:
+            if self.rect.centery < self.bound:
+                self.vy = 0
+                self.state = "stop"
+            self.rect.centery -= self.vy
 
 
 class Dragon(pg.sprite.Sprite):
@@ -311,7 +327,7 @@ class Score:
     def __init__(self):
         self.font = pg.font.Font(None, 50)
         self.color = (0, 0, 255)
-        self.value = 0
+        self.value = 790
         self.image = self.font.render(f"Score: {self.value}", 0, self.color)
         self.rect = self.image.get_rect()
         self.rect.center = 100, HEIGHT-50
@@ -322,8 +338,7 @@ class Score:
 
 
 start = time.time()  # start の定義
-# print(start)
-a = 0
+
 
 class Time:
     """
@@ -332,11 +347,11 @@ class Time:
     def __init__(self):
         self.font = pg.font.Font(None, 50)
         self.color = (255, 255, 255)  # 色
-        self.measure_time = 120 - (time.time() - start) # 120秒の制限時間を表示　
+        self.hoge = 10
+        self.measure_time = self.hoge - (time.time() - start) # 120秒の制限時間を表示　
         self.image = self.font.render(f"Time: {self.measure_time:.2f}", 0, self.color)
         self.rect = self.image.get_rect()
         self.rect.center = 135, HEIGHT - 100  # Time の座標
-        self.hoge = 120
         if self.measure_time < 0:  # self.measure_time の値を0未満にしない。　若干のラグにより0未満になってしまうため
             self.measure_time = 0
         
@@ -478,6 +493,7 @@ def main():
     state  = "sta1"
     score = Score()
     labo_life = 1025  # ボスの体力を設定
+    idx = 2
 
     # サウンド類のロード
     pg.mixer.pre_init(44100, 32, 2, 1024)  # Mixerを初期化
@@ -505,10 +521,10 @@ def main():
 
     tmr = 0
     clock = pg.time.Clock() 
+    time_class = Time()  # Timeクラスを呼び出す
     
 
     while True:
-        time_class = Time()  # Timeクラスを呼び出す
         key_lst = pg.key.get_pressed()
         for event in pg.event.get():
             if event.type == pg.QUIT:
@@ -532,7 +548,7 @@ def main():
                     if score.value > 100:
                         gvts.add(Gravity(400))
                         score.value -= 100
-        if score.value >= 500:
+        if score.value >= 600 and idx == 2:
             state = "stage3"
         if state == "stage3":
             sta3.add(Stage3(screen))
@@ -540,20 +556,30 @@ def main():
             if score.value >= 800 and labo_life > 0:
                 state = "boss"
                 labo = Lastboss(screen)
-        if score.value >= 300 and score.value < 500:
+        if score.value >= 300 and score.value < 600 and idx == 0:
+            idx += 1
             state = "sta2"
         if state == "sta1":
             screen.blit(bg_img, [0, 0])
         if state == "sta2":
             stage2.add(Stage2(bombs, screen))
-
-        if tmr%200 == 0 and score.value >= 300 and score.value <= 315:
+        
+        if tmr%200 == 0 and score.value >= 300 and score.value <= 500:
             dragons.add(Dragon())
-        if state == "sta1" or state == "sta2":
-            if tmr%200 == 0:  # 200フレームに1回，敵機を出現させる
+        if state == "sta1":
+            if tmr%300 == 0:  # 200フレームに1回，敵機を出現させる
+                emys.add(Enemy("normal"))
+            if tmr%100 == 0:
+                emys.add(Enemy("normal"))
+        if state == "sta2":
+            if tmr%200 == 0:
                 emys.add(Enemy("normal"))
         if state == "boss" or state == "stage3":
             if tmr%150 == 0:
+                emys.add(Enemy("up"))
+            if tmr%200 == 0:
+                emys.add(Enemy("up"))
+            if tmr%250 == 0:
                 emys.add(Enemy("up"))
 
         for emy in emys:
@@ -578,7 +604,7 @@ def main():
 
         for dragon in pg.sprite.groupcollide(dragons, beams, True, True).keys():
             exps.add(Explosion(dragon, 100))  # 爆発エフェクト
-            score.value += 50  # 50点アップ
+            score.value += 30  # 50点アップ
             bird.change_img(9, screen)  # こうかとん喜びエフェクト
             bomb_sound.play()
 
@@ -642,15 +668,20 @@ def main():
                     time.sleep(2)
                     return
             
-        if state == "sta2":
-            time_class.hoge += 100  # ２面での制限時間の増加
+        if state == "sta2" and idx == 1:
+            idx += 1
+            a = time_class.measure_time
+            time_class = Time()  # Timeクラスを呼び出す
+            time_class.hoge = 100 + time_class.measure_time  # ２面での制限時間の増加
             time_class.update(screen)
 
-        if state == "stage3":
-            time_class.hoge = time_class.hoge + 60  # ３面での制限時間の増加        
+        if state == "stage3" and idx == 2:
+            a = time_class.measure_time
+            time_class = Time()  # Timeクラスを呼び出す
+            time_class.hoge = time_class.measure_time + 120  # ３面での制限時間の増加        
             time_class.update(screen)
 
-        if time_class.hoge <= 0:  # 制限時間を過ぎたら Game Over
+        if time_class.measure_time <= 0:  # 制限時間を過ぎたら Game Over
                 bird.change_img(8, screen) 
                 score.update(screen)
                 time_class.update(screen)
