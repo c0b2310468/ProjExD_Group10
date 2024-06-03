@@ -421,7 +421,7 @@ class Stage3(pg.sprite.Sprite):
         引数 screen：画面Surface
         """
         super().__init__()
-        self.image = pg.image.load("fig/space.jpeg")
+        self.image = pg.image.load("fig/hell.jpg")
         pg.display.update()
         screen.blit(self.image, [0,0])
 
@@ -440,7 +440,22 @@ class Lastboss(pg.sprite.Sprite):
         self.rect = self.image.get_rect()
         self.rect.center = WIDTH//2, HEIGHT//2-50
         screen.blit(self.image, [WIDTH//2-200, HEIGHT//2-200])
-        
+
+
+class Lastbosslife(pg.sprite.Sprite):
+    def __init__(self, screen: pg.Surface):
+        super().__init__()
+        self.font = pg.font.Font(None, 50)
+        self.color = (0, 255, 255)
+        self.life = 1025
+        self.image1 = self.font.render(f"life: {self.life}", 0, self.color)
+        self.rect1 = self.image1.get_rect()
+        self.rect1.center = 150, HEIGHT-150
+
+    def update(self, screen: pg.Surface):
+        self.image1 = self.font.render(f"life: {self.life}", 0, self.color)
+        screen.blit(self.image1, self.rect1)
+        print(self.life)
 
 class Stage2(pg.sprite.Sprite):
     """
@@ -492,8 +507,8 @@ def main():
     bg_img = pg.image.load(f"fig/pg_bg.jpg")
     state  = "sta1"
     score = Score()
-    labo_life = 1025  # ボスの体力を設定
-    idx = 0
+    idx = 2
+    idx1 = 0
 
     # サウンド類のロード
     pg.mixer.pre_init(44100, 32, 2, 1024)  # Mixerを初期化
@@ -516,6 +531,7 @@ def main():
     dragons = pg.sprite.Group()
     fires = pg.sprite.Group()
     sta3 = pg.sprite.Group()
+    labo = pg.sprite.Group()
 
     tmr = 0
     clock = pg.time.Clock() 
@@ -532,22 +548,22 @@ def main():
                 beams.add(Beam(bird))
                 shoot_sound.play()
             if score.value >= 50 and key_lst[pg.K_RSHIFT]:
-                if state != "stage3" or "boss":  # 3面到達時に使用不可になるように設定
+                if state != "stage3" or state != "boss":  # 3面到達時に使用不可になるように設定
                     if score.value > 50:
                         bird.state = "hyper"
                         bird.hyper_life = 500
                         score.value -= 50
             if event.type == pg.KEYDOWN and event.key == pg.K_e:
-                if state != "stage3" or "boss":  # 3麺到達時に使用不可になるように設定
+                if state != "stage3" or state != "boss":  # 3麺到達時に使用不可になるように設定
                     if score.value > 10:
                         emp.add(Emp(emys, bombs, screen))
                         score.value -=10
             if event.type == pg.KEYDOWN and event.key == pg.K_RETURN and score.value > 100:
-                if state != "stage3" or "boss":
+                if state != "stage3" or state != "boss":
                     if score.value > 100:
                         gvts.add(Gravity(400))
                         score.value -= 100
-        if score.value >= 600 and idx == 2:
+        if score.value >= 600 and idx == 2 :
             state = "stage3"
         if state == "stage3":
             sta3.add(Stage3(screen))
@@ -556,7 +572,7 @@ def main():
                 pg.mixer.music.play(-1)  # BGMを繰り返し再生
                 flag += 1
             score.color = (255, 0, 0)
-            if score.value >= 800 and labo_life > 0:
+            if score.value >= 800:
                 state = "boss"
                 labo = Lastboss(screen)
         if score.value >= 300 and score.value < 600 and idx == 0:
@@ -570,6 +586,9 @@ def main():
                 pg.mixer.music.play(-1)
                 flag += 1
             stage2.add(Stage2(bombs, screen))
+        if state == "boss" and idx1 == 0:
+            lali = Lastbosslife(screen)
+            idx1 += 1
         
         if tmr%200 == 0 and score.value >= 300 and score.value <= 500:
             dragons.add(Dragon())
@@ -585,8 +604,6 @@ def main():
             if tmr%150 == 0:
                 emys.add(Enemy("up"))
             if tmr%200 == 0:
-                emys.add(Enemy("up"))
-            if tmr%500 == 0:
                 emys.add(Enemy("up"))
 
         for emy in emys:
@@ -666,10 +683,10 @@ def main():
             for beam in pg.sprite.spritecollide(labo, beams, True):
                 exps.add(Explosion(labo, 50))  # 爆発エフェクト
                 bird.change_img(6, screen)  # こうかとん喜びエフェクト
-                labo_life -= beam.attack  # ボスの体力減少設定
+                lali.life -= beam.attack  # ボスの体力減少設定
                 pg.display.update()
                 time_class.update(screen)
-                if labo_life <= 0:
+                if lali.life <= 0:
                     pg.mixer.music.stop()
                     clear_sound.play()
                     Success(screen)
@@ -691,13 +708,13 @@ def main():
             time_class.update(screen)
 
         if time_class.measure_time <= 0:  # 制限時間を過ぎたら Game Over
-                bird.change_img(8, screen) 
-                score.update(screen)
-                time_class.update(screen)
-                Failure(screen)
-                pg.display.update()
-                time.sleep(2)
-                break
+            bird.change_img(8, screen) 
+            score.update(screen)
+            time_class.update(screen)
+            Failure(screen)
+            pg.display.update()
+            time.sleep(2)
+            break
         
 
         bird.update(key_lst, screen)
@@ -716,6 +733,8 @@ def main():
         fires.draw(screen)
         dragons.update()
         dragons.draw(screen)
+        if state == "boss":
+            lali.update(screen)
         time_class.update(screen)  # time_class を update
         pg.display.update()
         tmr += 1
