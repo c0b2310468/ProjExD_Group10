@@ -656,7 +656,7 @@ def main():
 
         for dragon in pg.sprite.groupcollide(dragons, beams, True, True).keys():
             exps.add(Explosion(dragon, 100))  # 爆発エフェクト
-            score.value += 30  # 50点アップ
+            score.value += 30  # 30点アップ
             bird.change_img(9, screen)  # こうかとん喜びエフェクト
             bomb_sound.play()
 
