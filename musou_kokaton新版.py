@@ -631,7 +631,7 @@ def main():
         if state == "boss" or state == "stage3":
             if tmr%150 == 0:
                 emys.add(Enemy("up"))
-            if tmr%200 == 0:
+            if tmr%300 == 0:
                 emys.add(Enemy("up"))
 
         for emy in emys:
